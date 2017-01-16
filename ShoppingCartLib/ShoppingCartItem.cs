@@ -8,34 +8,61 @@ namespace ShoppingCartLib
     {
         public decimal CheckOut(List<ShoppingCartItem> shoppingCartItems)
         {
-            return CalculatePayment(shoppingCartItems);
+            var shouldPaymentItems = shoppingCartItems.AsEnumerable();
+            return CalculatePayment(shouldPaymentItems);
         }
 
-        private decimal CalculatePayment(List<ShoppingCartItem> shoppingCartItems)
+        private decimal CalculatePayment(IEnumerable<ShoppingCartItem> shoppingCartItems)
         {
-            var shoudPaymentItems = shoppingCartItems.Where(item => item.Amount >= 1);
             decimal payment = 0;
             decimal discount = 0;
 
-            if (shoudPaymentItems.Count() == 1)
-            { discount = 0; }
-            else if (shoudPaymentItems.Count() == 2)
-            { discount = 0.05m; }
-            else if (shoudPaymentItems.Count() == 3)
-            { discount = 0.1m; }
-            else if (shoudPaymentItems.Count() == 4)
-            { discount = 0.2m; }
-            else if (shoudPaymentItems.Count() == 5)
-            { discount = 0.25m; }
+            // 用一個變數儲存，來減少執行第二次數量計算
+            int countForAmountGreaterEqual1 = GetCountForAmountGreaterEqual1(shoppingCartItems);
+            switch (countForAmountGreaterEqual1)
+            {
+                case 1:
+                    discount = 0;
+                    break;
+                case 2:
+                    discount = 0.05m;
+                    break;
+                case 3:
+                    discount = 0.1m;
+                    break;
+                case 4:
+                    discount = 0.2m;
+                    break;
+                case 5:
+                    discount = 0.25m;
+                    break;
+                default:
+                    break;
+            }
+            payment += 100 * countForAmountGreaterEqual1 * (1 - discount);
 
-            payment = CalculatePayment(discount, shoudPaymentItems);
+            ItemsAmountMinus1(ref shoppingCartItems);
+            while (GetCountForAmountGreaterEqual1(shoppingCartItems) >= 1)
+            {
+                payment += CalculatePayment(shoppingCartItems);
+            }
 
             return payment;
         }
 
-        private decimal CalculatePayment(decimal discount, IEnumerable<ShoppingCartItem> shoudPaymentItems)
+        // 計算 數量大於等於 1 的品項數
+        private int GetCountForAmountGreaterEqual1(IEnumerable<ShoppingCartItem> shouldPaymentItems)
         {
-            return 100 * shoudPaymentItems.Sum(item => item.Amount) * (1 - discount);
+            return shouldPaymentItems.Where(item => item.Amount >= 1).Count();
+        }
+
+        // 對數量大於等於 1 的品項數量減1
+        private void ItemsAmountMinus1(ref IEnumerable<ShoppingCartItem> shouldPaymentItems)
+        {
+            foreach (var shoppingCartItem in shouldPaymentItems.Where(item => item.Amount >= 1).Select(i => i))
+            {
+                shoppingCartItem.AmountMinus1();
+            }
         }
     }
 
@@ -52,6 +79,11 @@ namespace ShoppingCartLib
             this._productId = productId;
             this._productName = productName;
             this._amount = amount;
+        }
+
+        internal void AmountMinus1()
+        {
+            this._amount--;
         }
     }
 }
