@@ -25,6 +25,8 @@ namespace ShoppingCartLib
             { discount = 0.1m; }
             else if (shoudPaymentItems.Count() == 4)
             { discount = 0.2m; }
+            else if (shoudPaymentItems.Count() == 5)
+            { discount = 0.25m; }
 
             payment = CalculatePayment(discount, shoudPaymentItems);
 
