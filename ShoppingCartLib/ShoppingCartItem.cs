@@ -13,13 +13,23 @@ namespace ShoppingCartLib
 
         private decimal CalculatePayment(List<ShoppingCartItem> shoppingCartItems)
         {
-            // 數量大於等於 1 的品項 = 1
             var shoudPaymentItems = shoppingCartItems.Where(item => item.Amount >= 1);
+            decimal payment = 0;
+            decimal discount = 0;
+
             if (shoudPaymentItems.Count() == 1)
-            {
-                return 100 * shoudPaymentItems.Count();
-            }
-            return 0;
+            { discount = 0; }
+            else if (shoudPaymentItems.Count() == 2)
+            { discount = 0.05m; }
+
+            payment = CalculatePayment(discount, shoudPaymentItems);
+
+            return payment;
+        }
+
+        private decimal CalculatePayment(decimal discount, IEnumerable<ShoppingCartItem> shoudPaymentItems)
+        {
+            return 100 * shoudPaymentItems.Sum(item => item.Amount) * (1 - discount);
         }
     }
 
